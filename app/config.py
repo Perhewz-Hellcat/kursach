@@ -1,10 +1,10 @@
 import os
 
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")
     SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "postgresql://postgres:password@localhost:5432/audio_db"
+        "DATABASE_URL", "postgresql://postgres:123456789@localhost:5432/audio_db"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
