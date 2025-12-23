@@ -5,3 +5,5 @@ Flask-JWT-Extended
 psycopg2-binary
 python-dotenv
 Werkzeug
+celery
+redis
