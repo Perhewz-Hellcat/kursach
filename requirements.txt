@@ -4,3 +4,4 @@ Flask-Migrate
 Flask-JWT-Extended
 psycopg2-binary
 python-dotenv
+Werkzeug
