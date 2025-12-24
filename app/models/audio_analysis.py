@@ -1,5 +1,6 @@
 from app.extensions import db
 
+
 class AudioAnalysis(db.Model):
     __tablename__ = "audio_analysis"
 
@@ -13,5 +14,8 @@ class AudioAnalysis(db.Model):
     spectral_centroid_mean = db.Column(db.Float)
 
     mfcc = db.Column(db.JSON)
+
+    waveform = db.Column(db.JSON)
+    fft = db.Column(db.JSON)
 
     created_at = db.Column(db.DateTime, server_default=db.func.now())

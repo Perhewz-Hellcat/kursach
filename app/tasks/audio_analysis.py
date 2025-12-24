@@ -39,6 +39,13 @@ def analyze_audio(self, audio_id):
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         mfcc_mean = np.mean(mfcc, axis=1).tolist()
 
+        # 🔹 Осциллограмма (уменьшаем размер)
+        waveform = y[:: sr // 100].tolist()
+
+        # 🔹 FFT
+        fft = np.abs(np.fft.rfft(y))
+        fft = fft[:500].tolist()
+
         # 🔹 Сохранение в БД
         analysis = AudioAnalysis(
             audio_id=audio.id,
@@ -47,6 +54,8 @@ def analyze_audio(self, audio_id):
             rms_mean=rms_mean,
             spectral_centroid_mean=spectral_centroid_mean,
             mfcc=mfcc_mean,
+            waveform=waveform,
+            fft=fft,
         )
 
         db.session.add(analysis)

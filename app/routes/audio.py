@@ -97,3 +97,20 @@ def get_audio_analysis(audio_id):
         "spectral_centroid_mean": analysis.spectral_centroid_mean,
         "mfcc": analysis.mfcc,
     }, 200
+
+
+@audio_bp.route("/<int:audio_id>/visualization", methods=["GET"])
+@jwt_required()
+def get_audio_visualization(audio_id):
+    user_id = get_jwt_identity()
+
+    audio = AudioFile.query.filter_by(id=audio_id, user_id=user_id).first()
+
+    if not audio or not audio.analysis:
+        return {"message": "Visualization data not found"}, 404
+
+    return {
+        "waveform": audio.analysis.waveform,
+        "fft": audio.analysis.fft,
+        "mfcc": audio.analysis.mfcc,
+    }, 200
