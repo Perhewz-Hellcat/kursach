@@ -45,4 +45,9 @@ def upload_audio():
     db.session.add(audio)
     db.session.commit()
 
+    from app.tasks.audio_analysis import analyze_audio
+    analyze_audio.delay(audio.id)
+
     return jsonify({"message": "File uploaded successfully", "audio_id": audio.id}), 201
+
+    
