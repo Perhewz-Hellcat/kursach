@@ -14,8 +14,13 @@ def create_app():
     from app import models
     from app.routes.auth import auth_bp
     from app.routes.audio import audio_bp
+    from app.celery_app import make_celery
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(audio_bp)
+
+    celery = make_celery(app)
+    app.celery = celery
+
 
     return app
