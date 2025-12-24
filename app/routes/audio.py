@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models import AudioFile
+from app.models import AudioAnalysis
 
 audio_bp = Blueprint("audio", __name__, url_prefix="/api/audio")
 
@@ -46,8 +47,53 @@ def upload_audio():
     db.session.commit()
 
     from app.tasks.audio_analysis import analyze_audio
+
     analyze_audio.delay(audio.id)
 
     return jsonify({"message": "File uploaded successfully", "audio_id": audio.id}), 201
 
-    
+
+@audio_bp.route("/<int:audio_id>", methods=["GET"])
+@jwt_required()
+def get_audio_info(audio_id):
+    user_id = get_jwt_identity()
+
+    audio = AudioFile.query.filter_by(id=audio_id, user_id=user_id).first()
+
+    if not audio:
+        return {"message": "Audio not found"}, 404
+
+    return {
+        "id": audio.id,
+        "original_filename": audio.original_filename,
+        "status": audio.status,
+        "created_at": audio.created_at.isoformat(),
+    }, 200
+
+
+@audio_bp.route("/<int:audio_id>/analysis", methods=["GET"])
+@jwt_required()
+def get_audio_analysis(audio_id):
+    user_id = get_jwt_identity()
+
+    audio = AudioFile.query.filter_by(id=audio_id, user_id=user_id).first()
+
+    if not audio:
+        return {"message": "Audio not found"}, 404
+
+    if audio.status != "done":
+        return {"message": "Analysis not completed", "status": audio.status}, 400
+
+    analysis = AudioAnalysis.query.filter_by(audio_id=audio.id).first()
+
+    if not analysis:
+        return {"message": "Analysis data not found"}, 404
+
+    return {
+        "audio_id": audio.id,
+        "duration": analysis.duration,
+        "sample_rate": analysis.sample_rate,
+        "rms_mean": analysis.rms_mean,
+        "spectral_centroid_mean": analysis.spectral_centroid_mean,
+        "mfcc": analysis.mfcc,
+    }, 200
