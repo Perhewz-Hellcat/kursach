@@ -16,5 +16,13 @@ class AudioFile(db.Model):
 
     user = db.relationship("User", backref="audio_files")
 
+    # 🔹 СВЯЗЬ С АНАЛИЗОМ
+    analysis = db.relationship(
+        "AudioAnalysis",
+        backref="audio_file",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self):
         return f"<AudioFile {self.original_filename}>"

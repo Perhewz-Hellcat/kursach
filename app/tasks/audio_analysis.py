@@ -1,7 +1,11 @@
-from app.extensions import db
-from app.models import AudioFile
 from celery_worker import celery
-import time
+from app.extensions import db
+from app.models import AudioFile, AudioAnalysis
+
+import librosa
+import numpy as np
+import os
+
 
 @celery.task(bind=True)
 def analyze_audio(self, audio_id):
@@ -11,14 +15,43 @@ def analyze_audio(self, audio_id):
         return "Audio not found"
 
     try:
-        # 1. Статус: обработка
+        # 🔹 Статус: обработка
         audio.status = "processing"
         db.session.commit()
 
-        # 2. Имитация тяжёлой работы
-        time.sleep(5)
+        file_path = audio.file_path
 
-        # 3. Статус: готово
+        if not os.path.exists(file_path):
+            raise FileNotFoundError("Audio file not found on disk")
+
+        # 🔹 Загрузка аудио
+        y, sr = librosa.load(file_path, sr=None)
+
+        # 🔹 БАЗОВЫЕ ХАРАКТЕРИСТИКИ
+        duration = librosa.get_duration(y=y, sr=sr)
+
+        rms = librosa.feature.rms(y=y)
+        rms_mean = float(np.mean(rms))
+
+        spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
+        spectral_centroid_mean = float(np.mean(spectral_centroid))
+
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        mfcc_mean = np.mean(mfcc, axis=1).tolist()
+
+        # 🔹 Сохранение в БД
+        analysis = AudioAnalysis(
+            audio_id=audio.id,
+            duration=duration,
+            sample_rate=sr,
+            rms_mean=rms_mean,
+            spectral_centroid_mean=spectral_centroid_mean,
+            mfcc=mfcc_mean,
+        )
+
+        db.session.add(analysis)
+
+        # 🔹 Статус: готово
         audio.status = "done"
         db.session.commit()
 
