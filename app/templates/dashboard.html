@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dashboard</title>
+  </head>
+  <body>
+    <script>
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+    </script>
+    <button onclick="logout()">Выйти</button>
+    <hr />
+    <h2>Your audio files</h2>
+    <ul id="audio-list"></ul>
+
+    <h3>Upload new audio</h3>
+    <input type="file" id="file" />
+    <button onclick="upload()">Upload</button>
+
+    <script src="/static/main.js"></script>
+
+    <script>
+      checkAuth();
+
+      function loadAudios() {
+        fetch("/api/audio/", {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            const list = document.getElementById("audio-list");
+            list.innerHTML = "";
+
+            data.forEach((a) => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                <b>${a.filename}</b>
+                | status: ${a.status}
+                | <a href="/audio?id=${a.id}">View</a>
+            `;
+              list.appendChild(li);
+            });
+          });
+      }
+
+      function upload() {
+        const fileInput = document.getElementById("file");
+        if (!fileInput.files.length) {
+          alert("Выберите файл");
+          return;
+        }
+
+        const data = new FormData();
+        data.append("file", fileInput.files[0]);
+
+        fetch("/api/audio/upload", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          body: data,
+        })
+          .then((r) => r.json())
+          .then((resp) => {
+            alert("Файл загружен. ID: " + resp.audio_id);
+            loadAudios(); // 🔥 ОБНОВЛЯЕМ СПИСОК
+          });
+      }
+
+      loadAudios();
+    </script>
+  </body>
+</html>

@@ -114,3 +114,21 @@ def get_audio_visualization(audio_id):
         "fft": audio.analysis.fft,
         "mfcc": audio.analysis.mfcc,
     }, 200
+
+
+@audio_bp.route("/", methods=["GET"])
+@jwt_required()
+def get_user_audios():
+    user_id = get_jwt_identity()
+
+    audios = AudioFile.query.filter_by(user_id=user_id).all()
+
+    return [
+        {
+            "id": a.id,
+            "filename": a.original_filename,
+            "status": a.status,
+            "created_at": a.created_at.isoformat(),
+        }
+        for a in audios
+    ], 200

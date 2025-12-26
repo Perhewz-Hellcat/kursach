@@ -1,6 +1,7 @@
 from flask import Flask
 from .config import Config
 from .extensions import db, migrate, jwt
+from flask_talisman import Talisman
 
 
 def create_app():
@@ -22,5 +23,10 @@ def create_app():
     celery = make_celery(app)
     app.celery = celery
 
+    from app.routes.pages import pages_bp
+
+    app.register_blueprint(pages_bp)
+
+    Talisman(app, content_security_policy=None)
 
     return app
